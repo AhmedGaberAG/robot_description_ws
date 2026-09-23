@@ -14,6 +14,16 @@
             <origin xyz="0 0 ${base_height / 2.0}" rpy="0 0 0" />
             <material name="blue" />
         </visual>
+        <collision>
+            <geometry>
+                <box size="${base_length} ${base_width} ${base_height}" />
+            </geometry>
+            <origin xyz="0 0 ${base_height / 2.0}" rpy="0 0 0" />
+        </collision>
+        <xacro:inertial_box mass="${base_mass}" x="${base_length}" y="${base_width}"
+                                z="${base_height}">
+                            <origin xyz="0 0 ${base_height / 2.0}" rpy="0 0 0" />
+        </xacro:inertial_box>
     </link>
 
     <xacro:macro name="wheel_link" params="prefix">
@@ -25,6 +35,16 @@
                 <origin xyz="0 0 0" rpy="${pi / 2.0} 0 0" />
                 <material name="grey" />
             </visual>
+            <collision>
+                <geometry>
+                    <cylinder radius="${wheel_radius}" length="${wheel_length}" />
+                </geometry>
+                <origin xyz="0 0 0" rpy="${pi / 2.0} 0 0" />
+            </collision>
+            <xacro:inertial_cylinder mass="${wheel_mass}" length="${wheel_length}" 
+                                                        radius="${wheel_radius}">
+                                    <origin xyz="0 0 0" rpy="${pi / 2.0} 0 0" />
+            </xacro:inertial_cylinder>
         </link>
     </xacro:macro>
 
@@ -39,6 +59,16 @@
             <origin xyz="0 0 0" rpy="0 0 0" />
             <material name="red" />
         </visual>
+        <collision>
+            <geometry>
+                <sphere radius="${caster_radius}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+        </collision>
+        <xacro:inertial_sphere mass="${caster_mass}" 
+                               radius="${caster_radius}">
+                               <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_sphere>
     </link>
 
     <link name="laser_link">
@@ -49,6 +79,16 @@
             <origin xyz="0 0 0" rpy="0 0 0" />
             <material name="dark_grey" />
         </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${lidar_radius}" length="${lidar_length}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+        </collision>
+        <xacro:inertial_cylinder mass="${lidar_mass}" length="${lidar_length}" 
+                                                      radius="${lidar_radius}">
+                                <origin xyz="0 0 0" rpy="0 0 0" />
+        </xacro:inertial_cylinder>
     </link>
 
     <link name="camera_link">
@@ -59,6 +99,16 @@
             <origin xyz="0 0 0" rpy="0 ${pi / 2.0} 0" />
             <material name="green" />
         </visual>
+        <collision>
+             <geometry>
+                <box size="${camera_length} ${camera_width} ${camera_height}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 ${pi / 2.0} 0" />
+        </collision>
+        <xacro:inertial_box mass="${camera_mass}" x="${camera_length}" y="${camera_width}"
+                                z="${camera_height}">
+                            <origin xyz="0 0 0" rpy="0 ${pi / 2.0} 0" />
+        </xacro:inertial_box>
     </link>
 
     <link name="imu_link">
@@ -69,6 +119,16 @@
             <origin xyz="0 0 0" rpy="0 0 0" />
             <material name="blue" />
         </visual>
+        <collision>
+            <geometry>
+                <box size="${imu_length} ${imu_width} ${imu_height}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+        </collision>
+        <xacro:inertial_box mass="${imu_mass}" x="${imu_length}" y="${imu_width}"
+                                z="${imu_height}">
+                            <origin xyz="0 0 0" rpy="0 0 0" />
+        </xacro:inertial_box>
     </link>
 
     <joint name="base_joint" type="fixed">
