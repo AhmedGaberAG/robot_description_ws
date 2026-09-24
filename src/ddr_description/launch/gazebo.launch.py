@@ -2,76 +2,113 @@ import os
 from os import pathsep
 from pathlib import Path
 from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
-from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution, PythonExpression
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    SetEnvironmentVariable,
+    RegisterEventHandler,
+)
+from launch.event_handlers import OnProcessExit
+from launch.substitutions import (
+    Command,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+    PythonExpression,
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
-
 def generate_launch_description():
+
+    # Package paths
     ddr_description = get_package_share_directory("ddr_description")
 
+    # Launch arguments
     model_arg = DeclareLaunchArgument(
-        name="model", default_value=os.path.join(
-                ddr_description, "urdf", "ddr_robot.urdf.xacro"
-            ),
-        description="Absolute path to robot urdf file"
-    )
-
-    world_name_arg = DeclareLaunchArgument(name="world_name", default_value="empty")
-
-    world_path = PathJoinSubstitution([
+        name="model",
+        default_value=os.path.join(
             ddr_description,
-            "worlds",
-            PythonExpression(expression=["'", LaunchConfiguration("world_name"), "'", " + '.world'"])
-        ]
+            "urdf",
+            "ddr_robot.urdf.xacro",
+        ),
+        description="Absolute path to robot Xacro file",
+    )
+    world_name_arg = DeclareLaunchArgument(
+        name="world_name",
+        default_value="empty",
+        description="Gazebo world name",
     )
 
+    # Gazebo world
+    world_path = PathJoinSubstitution([
+        ddr_description,
+        "worlds",
+        PythonExpression([
+            "'",
+            LaunchConfiguration("world_name"),
+            "' + '.world'",
+        ]),
+    ])
+
+    # Gazebo resource path
     model_path = str(Path(ddr_description).parent.resolve())
-    model_path += pathsep + os.path.join(get_package_share_directory("ddr_description"), 'models')
+    model_path += pathsep + os.path.join(ddr_description, "models",)
+    gazebo_resource_path = SetEnvironmentVariable(name="GZ_SIM_RESOURCE_PATH",
+                                                  value=model_path,)
 
-    gazebo_resource_path = SetEnvironmentVariable(
-        "GZ_SIM_RESOURCE_PATH",
-        model_path
-        )
-
-    robot_description = ParameterValue(Command([
-            "xacro ",
-            LaunchConfiguration("model")
+    # Robot description
+    robot_description = ParameterValue(
+        Command([
+                "xacro ",
+                LaunchConfiguration("model"),
             ]),
-        value_type=str
+        value_type=str,
     )
 
+    # Robot State Publisher
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
-        parameters=[{"robot_description": robot_description,
-                     "use_sim_time": True}]
+        output="screen",
+        parameters=[{
+                "robot_description": robot_description,
+                "use_sim_time": True,
+            }],
     )
 
+    # Gazebo Sim
     gazebo = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory("ros_gz_sim"), "launch"), "/gz_sim.launch.py"]),
-                launch_arguments={
-                    "gz_args": PythonExpression(["'", world_path, " -v 4 -r'"])
-                }.items()
-             )
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("ros_gz_sim"),
+                "launch",
+                "gz_sim.launch.py",
+            )
+        ),
+        launch_arguments={ 
+            "gz_args": PythonExpression(["'", world_path, " -v 4 -r'", ])}.items(),
+    )
 
+    # Spawn robot into Gazebo
     gz_spawn_entity = Node(
         package="ros_gz_sim",
         executable="create",
         output="screen",
-        arguments=["-topic", "robot_description",
-                   "-name", "ddr_robot"],
+        arguments=[
+            "-topic",
+            "robot_description",
+            "-name",
+            "ddr_robot",
+        ],
     )
 
+    # Gazebo <-> ROS 2 bridge
     gz_ros2_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
+        output="screen",
         arguments=[
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
             "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
@@ -79,16 +116,66 @@ def generate_launch_description():
             "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
         ],
         remappings=[
-            ('/imu', '/imu/out'),
-        ]
+            ("/imu", "/imu/out"),
+        ],
     )
 
+    # Controller spawners
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        output="screen",
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
+    )
+
+    simple_velocity_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        output="screen",
+        arguments=[
+            "simple_velocity_controller",
+            "--controller-manager",
+            "/controller_manager",
+        ],
+    )
+
+    # Start controllers after robot is spawned
+    load_joint_state_broadcaster = RegisterEventHandler(
+        OnProcessExit(
+            target_action=gz_spawn_entity,
+            on_exit=[
+                joint_state_broadcaster_spawner,
+            ],
+        )
+    )
+    load_simple_velocity_controller = RegisterEventHandler(
+        OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[
+                simple_velocity_controller_spawner,
+            ],
+        )
+    )
+
+    # Launch description
     return LaunchDescription([
-        model_arg,
-        world_name_arg,
-        gazebo_resource_path,
-        robot_state_publisher_node,
-        gazebo,
-        gz_spawn_entity,
-        gz_ros2_bridge
-    ])
+            # Arguments
+            model_arg,
+            world_name_arg,
+            # Environment
+            gazebo_resource_path,
+            # Robot
+            robot_state_publisher_node,
+            # Simulation
+            gazebo,
+            gz_spawn_entity,
+            # ROS 2 interfaces
+            gz_ros2_bridge,
+            # Controllers
+            load_joint_state_broadcaster,
+            load_simple_velocity_controller,
+        ])

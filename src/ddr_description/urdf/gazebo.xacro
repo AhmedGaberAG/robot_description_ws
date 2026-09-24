@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<robot xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="ddr_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!-- Wheels -->
     <gazebo reference="right_wheel_link">
@@ -33,8 +33,12 @@
         <maxVel>1.0</maxVel>
     </gazebo>
 
-    <!-- Gazebo Sensors System -->
+    <!-- Gazebo System -->
     <gazebo>
+        <plugin filename="ign_ros2_control-system"
+                    name="ign_ros2_control::IgnitionROS2ControlPlugin">
+                <parameters>$(find ddr_description)/config/ddr_controllers.yaml</parameters>
+        </plugin>
         <plugin filename="ignition-gazebo-sensors-system"
                     name="ignition::gazebo::systems::Sensors">
                 <render_engine>ogre2</render_engine>

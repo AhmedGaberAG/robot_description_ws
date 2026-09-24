@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="ddr_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!-- Base -->
     <xacro:property name="base_length" value="0.6" />

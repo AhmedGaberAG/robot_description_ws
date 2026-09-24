@@ -7,9 +7,11 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(rclpy REQUIRED)
 
 install(
-  DIRECTORY urdf launch rviz worlds photos models
+  DIRECTORY urdf launch rviz worlds photos models config
   DESTINATION share/${PROJECT_NAME}/
 )
 ament_package()
