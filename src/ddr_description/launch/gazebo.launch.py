@@ -69,6 +69,20 @@ def generate_launch_description():
                    "-name", "ddr_robot"],
     )
 
+    gz_ros2_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=[
+            "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+            "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+            "/camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
+            "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
+        ],
+        remappings=[
+            ('/imu', '/imu/out'),
+        ]
+    )
+
     return LaunchDescription([
         model_arg,
         world_name_arg,
@@ -76,4 +90,5 @@ def generate_launch_description():
         robot_state_publisher_node,
         gazebo,
         gz_spawn_entity,
+        gz_ros2_bridge
     ])
