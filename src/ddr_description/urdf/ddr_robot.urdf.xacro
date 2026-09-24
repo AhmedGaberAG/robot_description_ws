@@ -149,8 +149,8 @@
         </joint>
     </xacro:macro>
 
-    <xacro:wheel_joint prefix="right" sign="1" />
-    <xacro:wheel_joint prefix="left" sign="-1" />
+    <xacro:wheel_joint prefix="right" sign="-1" />
+    <xacro:wheel_joint prefix="left" sign="1" />
 
     <joint name="caster_wheel_joint" type="fixed">
         <parent link="base_link" />
