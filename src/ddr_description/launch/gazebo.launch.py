@@ -57,6 +57,12 @@ def generate_launch_description():
     model_path += pathsep + os.path.join(ddr_description, "models",)
     gazebo_resource_path = SetEnvironmentVariable(name="GZ_SIM_RESOURCE_PATH",
                                                   value=model_path,)
+    # Gazebo bridge parameter
+    bridge_config = os.path.join(
+        ddr_description,
+        "config",
+        "gz_bridge.yaml",
+    )
 
     # Robot description
     robot_description = ParameterValue(
@@ -109,17 +115,10 @@ def generate_launch_description():
         package="ros_gz_bridge",
         executable="parameter_bridge",
         output="screen",
-        arguments=[
-            "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
-            "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
-            "/camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
-            "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
-        ],
-        remappings=[
-            ("/imu", "/imu/out"),
-        ],
+        parameters=[{
+            "config_file": bridge_config,
+        }],
     )
-
     # Controller spawners
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
