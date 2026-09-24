@@ -12,6 +12,7 @@
     <xacro:property name="wheel_radius" value="0.1" />
     <xacro:property name="wheel_length" value="0.05" />
     <xacro:property name="wheel_mass" value="0.5" />
+    <xacro:property name="wheel_separation" value="${base_width + wheel_length}" />
     <xacro:property name="caster_radius" value="${wheel_radius / 2.0}" />
     <xacro:property name="caster_mass" value="0.2" />
 

@@ -131,18 +131,27 @@ def generate_launch_description():
             "/controller_manager",
         ],
     )
-
-    simple_velocity_controller_spawner = Node(
+    # simple_velocity_controller_spawner = Node( 
+    #     package="controller_manager", 
+    #     executable="spawner", 
+    #     output="screen", 
+    #     arguments=[ 
+    #         "simple_velocity_controller", 
+    #         "--controller-manager", 
+    #         "/controller_manager", 
+    #         ], 
+    #     )
+    # DDR controller spawner
+    ddr_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         output="screen",
         arguments=[
-            "simple_velocity_controller",
+            "ddr_controller",
             "--controller-manager",
             "/controller_manager",
         ],
     )
-
     # Start controllers after robot is spawned
     load_joint_state_broadcaster = RegisterEventHandler(
         OnProcessExit(
@@ -152,11 +161,11 @@ def generate_launch_description():
             ],
         )
     )
-    load_simple_velocity_controller = RegisterEventHandler(
+    load_ddr_controller = RegisterEventHandler(
         OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
             on_exit=[
-                simple_velocity_controller_spawner,
+                ddr_controller_spawner,
             ],
         )
     )
@@ -177,5 +186,5 @@ def generate_launch_description():
             gz_ros2_bridge,
             # Controllers
             load_joint_state_broadcaster,
-            load_simple_velocity_controller,
+            load_ddr_controller,
         ])
